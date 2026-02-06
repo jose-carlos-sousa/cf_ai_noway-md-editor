@@ -6,7 +6,7 @@ declare namespace Cloudflare {
 		IMAGES: ImagesBinding;
 		ASSETS: Fetcher;
 		NEXTJS_ENV: string;
-		WORKER_SELF_REFERENCE: Fetcher /* resume-review */;
+		WORKER_SELF_REFERENCE: Fetcher /* noway-md-editor */;
 	}
 }
 interface CloudflareEnv extends Cloudflare.Env {}

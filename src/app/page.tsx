@@ -2,51 +2,15 @@
 
 import { useState } from "react";
 import Markdown from "react-markdown";
+import { extractMarkdown, extractExplanation } from "../../utils/markdownUtils";
 
-const defaultResume = `# Your Name
-
-**Email:** your.email@example.com | **Phone:** (123) 456-7890 | **LinkedIn:** linkedin.com/in/yourprofile
-
----
-
-## Summary
-
-Write a brief professional summary here...
-
----
-
-## Experience
-
-### Job Title | Company Name
-*Month Year - Present*
-
-- Achievement or responsibility
-- Another achievement
-- Key project or initiative
-
-### Previous Job Title | Previous Company
-*Month Year - Month Year*
-
-- Achievement or responsibility
-- Another achievement
-
----
-
-## Education
-
-### Degree Name | University Name
-*Graduation Year*
-
-- GPA: 3.X/4.0
-- Relevant coursework
-
----
-
-## Skills
-
-**Technical:** Skill 1, Skill 2, Skill 3
-**Languages:** Language 1, Language 2
+const defaultResume = `# My tasks
+- Go to the Gym
+- Buy bread
+- Help John with homework
 `;
+
+const WORKER_URL = "https://my-llama-xd.2409jmsousa.workers.dev";
 
 export default function Home() {
 	const [markdown, setMarkdown] = useState(defaultResume);
@@ -54,35 +18,61 @@ export default function Home() {
 	const [showAI, setShowAI] = useState(true);
 	const [messages, setMessages] = useState<{ role: "user" | "assistant"; content: string }[]>([]);
 	const [input, setInput] = useState("");
+	const [isLoading, setIsLoading] = useState(false);
+	const [pendingMarkdown, setPendingMarkdown] = useState<string | null>(null);
+	const [showReview, setShowReview] = useState(false);
+	const [diffLines, setDiffLines] = useState<Array<{ type: "added" | "removed" | "unchanged"; content: string }>>([]);
 
-	const exportMarkdown = () => {
-		const blob = new Blob([markdown], { type: "text/markdown" });
-		const url = window.URL.createObjectURL(blob);
-		const a = document.createElement("a");
-		a.href = url;
-		a.download = "resume.md";
-		document.body.appendChild(a);
-		a.click();
-		window.URL.revokeObjectURL(url);
-		document.body.removeChild(a);
+	const extractExplanation = (text: string): string => {
+		// Always return the text after the markdown block
+		const match = text.match(/```markdown\n([\s\S]*?)```/);
+		if (match) {
+			return text.slice(match.index + match[0].length).trim();
+		}
+		const openBlock = text.match(/```markdown\n([\s\S]*)/);
+		if (openBlock) {
+			return text.slice(openBlock.index + openBlock[0].length).trim();
+		}
+		return "";
 	};
 
-	const handleSendMessage = () => {
-		if (!input.trim()) return;
-
-		setMessages([...messages, { role: "user", content: input }]);
-
-		setTimeout(() => {
-			setMessages((prev) => [
-				...prev,
-				{
-					role: "assistant",
-					content: "AI integration coming soon! I will help you edit your resume.",
-				},
-			]);
-		}, 500);
+	const handleSendMessage = async () => {
+		if (!input.trim() || isLoading) return;
 
 		setInput("");
+		setMessages((prev) => [...prev, { role: "user", content: input }]);
+		setIsLoading(true);
+
+		try {
+			const response = await fetch(WORKER_URL, {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({
+					markdown,
+					userMessage: input,
+					chatHistory: messages,
+				}),
+			});
+			const data = await response.json();
+			const aiMessage = data.message;
+			console.log("AI response:", aiMessage); // Debug output
+			const newMarkdown = extractMarkdown(aiMessage);
+			const explanation = extractExplanation(aiMessage);
+			setMessages((prev) => [...prev, { role: "assistant", content: explanation }]);
+			if (newMarkdown) {
+				const diff = diffLinesLCS(normalizeMarkdown(markdown), normalizeMarkdown(newMarkdown));
+				setPendingMarkdown(newMarkdown);
+				setShowReview(true);
+				setDiffLines(diff);
+			}
+		} catch (error) {
+			setMessages((prev) => [
+				...prev,
+				{ role: "assistant", content: "Error connecting to AI. Please try again." },
+			]);
+		} finally {
+			setIsLoading(false);
+		}
 	};
 
 	return (
@@ -91,19 +81,98 @@ export default function Home() {
 				<header className="mb-8 flex items-center justify-between">
 					<div>
 						<h1 className="text-4xl font-bold text-slate-900 dark:text-white mb-2">
-							Resume Editor
+							Markdown Editor
 						</h1>
 						<p className="text-slate-600 dark:text-slate-400">
-							Edit your resume in Markdown format
+							Edit your markdown documents easily
 						</p>
 					</div>
-					<button
-						onClick={exportMarkdown}
-						className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium"
-					>
-						Export
-					</button>
+					<div className="flex items-center gap-3">
+						<button
+							onClick={() => setShowPreview(!showPreview)}
+							className={`px-3 py-2 rounded-lg transition-colors text-sm font-medium flex items-center gap-2 ${
+								showPreview
+									? "bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300"
+									: "bg-slate-300 dark:bg-slate-600 text-slate-800 dark:text-white"
+							}`}
+							title={showPreview ? "Hide Preview" : "Show Preview"}
+						>
+							<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+								<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+							</svg>
+							{showPreview ? "Preview" : "Preview"}
+						</button>
+						<button
+							onClick={exportMarkdown}
+							className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium"
+						>
+							Export
+						</button>
+					</div>
 				</header>
+
+				{/* AI Edit Review Panel */}
+				{showReview && pendingMarkdown && (
+					<div className="mb-6">
+						<div className="bg-yellow-50 dark:bg-yellow-900 border border-yellow-300 dark:border-yellow-700 rounded-lg shadow-lg overflow-hidden">
+							<div className="px-4 py-3 border-b border-yellow-200 dark:border-yellow-700 flex items-center justify-between">
+								<h2 className="text-sm font-semibold text-yellow-800 dark:text-yellow-200">AI Proposed Changes</h2>
+								<button
+									onClick={() => { setShowReview(false); setPendingMarkdown(null); setDiffLines([]); }}
+									className="text-yellow-500 hover:text-yellow-700 transition-colors"
+									title="Dismiss review"
+								>
+									<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+									</svg>
+								</button>
+							</div>
+							<div className="flex-1 overflow-auto p-8">
+								{diffLines.length === 0 || diffLines.every(l => l.type === "unchanged") ? (
+									<div className="text-yellow-900 dark:text-yellow-100 text-sm font-mono bg-yellow-100 dark:bg-yellow-800 rounded p-4">
+										No changes detected.
+									</div>
+								) : (
+									<pre className="text-sm font-mono bg-yellow-100 dark:bg-yellow-800 rounded p-4 overflow-x-auto">
+										{diffLines.map((line, idx) => {
+											if (line.type === "added") {
+												return <div key={idx} className="text-green-700 dark:text-green-300 bg-green-100 dark:bg-green-900">+ {line.content}</div>;
+											} else if (line.type === "removed") {
+												return <div key={idx} className="text-red-700 dark:text-red-300 bg-red-100 dark:bg-red-900">- {line.content}</div>;
+											} else {
+												return <div key={idx} className="text-yellow-900 dark:text-yellow-100">  {line.content}</div>;
+											}
+										})}
+									</pre>
+								)}
+							</div>
+							<div className="border-t border-yellow-200 dark:border-yellow-700 p-4 flex gap-2 justify-end">
+								<button
+									onClick={() => {
+										setMarkdown(pendingMarkdown);
+										setShowReview(false);
+										setPendingMarkdown(null);
+										setDiffLines([]);
+									}}
+									className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors font-medium"
+								>
+									Accept Changes
+								</button>
+								<button
+									onClick={() => {
+										setShowReview(false);
+										setPendingMarkdown(null);
+										setDiffLines([]);
+									}}
+									className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-medium"
+								>
+									Deny Changes
+								</button>
+							</div>
+						</div>
+					</div>
+				)}
 
 				<div className={`grid gap-6 ${showPreview ? "grid-cols-1 lg:grid-cols-2" : "grid-cols-1"} mb-6`}>
 					{/* Editor Panel */}
@@ -122,7 +191,7 @@ export default function Home() {
 					</div>
 
 					{/* Preview Panel */}
-					{showPreview ? (
+					{showPreview && (
 						<div className="flex flex-col">
 							<div className={`bg-white dark:bg-slate-800 rounded-lg shadow-lg overflow-hidden flex flex-col ${showAI ? "h-[calc(50vh-80px)]" : "h-[calc(90vh-100px)]"}`}>
 								<div className="bg-slate-800 dark:bg-slate-700 px-4 py-3 border-b border-slate-700 flex items-center justify-between">
@@ -158,15 +227,6 @@ export default function Home() {
 								</div>
 							</div>
 						</div>
-					) : (
-						<div className="flex items-center justify-center">
-							<button
-								onClick={() => setShowPreview(true)}
-								className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors text-sm"
-							>
-								Show Preview
-							</button>
-						</div>
 					)}
 				</div>
 
@@ -181,7 +241,7 @@ export default function Home() {
 								title="Hide AI Assistant"
 							>
 								<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
 								</svg>
 							</button>
 						</div>
@@ -190,7 +250,7 @@ export default function Home() {
 						<div className="h-[calc(40vh-140px)] overflow-auto p-4 space-y-3">
 							{messages.length === 0 ? (
 								<p className="text-slate-500 dark:text-slate-400 text-center py-8">
-									Start chatting with the AI to get help editing your resume...
+									Ask the AI to help edit your resume... Try "Make my summary more professional"
 								</p>
 							) : (
 								messages.map((msg, idx) => (
@@ -207,6 +267,13 @@ export default function Home() {
 									</div>
 								))
 							)}
+							{isLoading && (
+								<div className="flex justify-start">
+									<div className="bg-slate-200 dark:bg-slate-700 rounded-lg px-4 py-2 text-slate-500 dark:text-slate-400">
+										Thinking...
+									</div>
+								</div>
+							)}
 						</div>
 
 						{/* Input */}
@@ -218,13 +285,15 @@ export default function Home() {
 									onChange={(e) => setInput(e.target.value)}
 									onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
 									placeholder="Ask AI to help with your resume..."
-									className="flex-1 px-4 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-900 dark:text-slate-100"
+									disabled={isLoading}
+									className="flex-1 px-4 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-900 dark:text-slate-100 disabled:opacity-50"
 								/>
 								<button
 									onClick={handleSendMessage}
-									className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium"
+									disabled={isLoading}
+									className="px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-lg transition-colors font-medium"
 								>
-									Send
+									{isLoading ? "..." : "Send"}
 								</button>
 							</div>
 						</div>
