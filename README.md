@@ -47,6 +47,6 @@ A short demo of the app is included in this repository as `vid.webm`. You can pr
 ## PROMPTS.md
 See `PROMPTS.md` for the LLM prompts used.
 
-- Cloudflare Workers: https://developers.cloudflare.com/workers/
-- Workers KV: https://developers.cloudflare.com/workers/runtime-apis/kv/
-- Workers AI: https://developers.cloudflare.com/workers/learning/ai
+- [Cloudflare Workers](https://workers.cloudflare.com/product/workers/)
+- [Workers KV](https://developers.cloudflare.com/kv/)
+- [Workers AI](https://www.cloudflare.com/developer-platform/products/workers-ai/)
