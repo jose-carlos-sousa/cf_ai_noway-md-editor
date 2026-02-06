@@ -20,9 +20,6 @@ npm run dev
 
 Open http://localhost:3000 to try the app locally.
 
-Notes:
-- The frontend may call a configured KV worker or the internal API route. Check `src/app/page.tsx` for `NEXT_PUBLIC_WORKER_URL` and `NEXT_PUBLIC_LLM_URL` usage.
-- Do not commit secrets or server-only API keys to client-exposed env vars (those prefixed with `NEXT_PUBLIC_`). Keep sensitive keys server-side.
 
 ## Deploy (Cloudflare Workers)
 Build and deploy with the provided scripts (this project uses OpenNext packaging):
@@ -47,9 +44,8 @@ A short demo of the app is included in this repository as `vid.webm`. You can pr
 </video>
 
 ## PROMPTS.md
-See `PROMPTS.md` for the LLM prompts used with the AI assistant. Per submission requirements, include prompts used in this file.
+See `PROMPTS.md` for the LLM prompts used.
 
-## References
 - Cloudflare Workers: https://developers.cloudflare.com/workers/
 - Workers KV: https://developers.cloudflare.com/workers/runtime-apis/kv/
 - Workers AI: https://developers.cloudflare.com/workers/learning/ai
