@@ -1,0 +1,8 @@
+name = "noway-md-kv-api"
+main = "worker.js"
+compatibility_date = "2026-02-06"
+workers_dev = true
+
+[[kv_namespaces]]
+binding = "KV"
+id = "c38b96ad08d8482bbfe0933fbc2f3637"
