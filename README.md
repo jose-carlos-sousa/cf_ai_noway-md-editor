@@ -7,8 +7,9 @@ This project is a Cloudflare-deployable Next.js app (OpenNext) that demonstrates
 ![App screenshot](img.png)
 
 ## Architecture
-- Frontend: Next.js app (`src/app`)
-- API: Handles requests to KV Worker for storage, Next.js Worker for app logic, and Worker AI for LLM (Llama 3 )
+- Frontend: Next.js running on Cloudflare Worker
+- API: Worker handles API requests and talks to Workers KV for storage
+- AI: Worker AI provides Llama 3 for editing assistance
 
 ## Local development
 Install dependencies and run locally:
