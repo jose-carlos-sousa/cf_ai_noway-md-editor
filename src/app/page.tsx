@@ -177,6 +177,21 @@ export default function Home() {
 							</p>
 						</div>
 						<div className="flex items-center gap-3">
+							{/* Logout button clears user state */}
+							<button
+								onClick={() => {
+									setUsername("");
+									setIsUsernameSubmitted(false);
+									setMarkdown(defaultResume);
+									setMessages([]);
+									setPendingMarkdown(null);
+									setShowReview(false);
+									setDiffLines([]);
+								}}
+								className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors font-medium"
+							>
+								Logout
+							</button>
 							<button
 								onClick={() => setShowPreview(!showPreview)}
 								className={`px-3 py-2 rounded-lg transition-colors text-sm font-medium flex items-center gap-2 ${

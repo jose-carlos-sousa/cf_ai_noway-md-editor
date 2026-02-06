@@ -1,47 +1,53 @@
-# OpenNext Starter
+# noway-md-editor
 
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+This project is a Cloudflare-deployable Next.js app (OpenNext) that demonstrates using Cloudflare Workers + Workers KV for storing user markdown and Workers AI (Llama 3.3 on Workers AI) for LLM-powered editing assistance.
 
-## Getting Started
+**Live app:** [https://noway-md-editor.2409jmsousa.workers.dev/](https://noway-md-editor.2409jmsousa.workers.dev/)
 
-Read the documentation at https://opennext.js.org/cloudflare.
+## Architecture
+- Frontend: Next.js app (`src/app`)
+- API: Handles requests to KV Worker for storage, Next.js Worker for app logic, and Worker AI for LLM (Llama 3 )
 
-## Develop
-
-Run the Next.js development server:
+## Local development
+Install dependencies and run locally:
 
 ```bash
+npm install
 npm run dev
-# or similar package manager command
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000 to try the app locally.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Notes:
+- The frontend may call a configured KV worker or the internal API route. Check `src/app/page.tsx` for `NEXT_PUBLIC_WORKER_URL` and `NEXT_PUBLIC_LLM_URL` usage.
+- Do not commit secrets or server-only API keys to client-exposed env vars (those prefixed with `NEXT_PUBLIC_`). Keep sensitive keys server-side.
 
-## Preview
-
-Preview the application locally on the Cloudflare runtime:
-
-```bash
-npm run preview
-# or similar package manager command
-```
-
-## Deploy
-
-Deploy the application to Cloudflare:
+## Deploy (Cloudflare Workers)
+Build and deploy with the provided scripts (this project uses OpenNext packaging):
 
 ```bash
+npm run build
 npm run deploy
-# or similar package manager command
 ```
 
-## Learn More
+Ensure your KV namespace is bound in the deployment config and that any server-only secrets are set in your Cloudflare worker secrets (not client env vars).
 
-To learn more about Next.js, take a look at the following resources:
+## How to try the components
+- Local: run the dev server and use the UI to enter a username, edit markdown, and use the AI assistant.
+- Deployed: after `npm run deploy` the deployment output will include a worker URL. Use that to open the app and exercise save/load.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Demo
+A short demo of the app is included in this repository as `vid.webm`. You can preview it directly in GitHub or download it locally.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+<video controls loop muted style="max-width:100%;height:auto">
+    <source src="vid.webm" type="video/webm" />
+    Your browser does not support the video tag. Download the demo: [vid.webm](vid.webm)
+</video>
+
+## PROMPTS.md
+See `PROMPTS.md` for the LLM prompts used with the AI assistant. Per submission requirements, include prompts used in this file.
+
+## References
+- Cloudflare Workers: https://developers.cloudflare.com/workers/
+- Workers KV: https://developers.cloudflare.com/workers/runtime-apis/kv/
+- Workers AI: https://developers.cloudflare.com/workers/learning/ai
