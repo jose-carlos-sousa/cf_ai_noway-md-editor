@@ -4,6 +4,8 @@ This project is a Cloudflare-deployable Next.js app (OpenNext) that demonstrates
 
 **Live app:** [https://noway-md-editor.2409jmsousa.workers.dev/](https://noway-md-editor.2409jmsousa.workers.dev/)
 
+![App screenshot](img.png)
+
 ## Architecture
 - Frontend: Next.js app (`src/app`)
 - API: Handles requests to KV Worker for storage, Next.js Worker for app logic, and Worker AI for LLM (Llama 3 )
