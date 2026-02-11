@@ -30,6 +30,23 @@ export const extractMarkdown = (text: string): string | null => {
 };
 
 /**
+ * Extracts the explanation part from the AI response (everything outside the markdown block).
+ * @param text - The full text from AI.
+ * @returns The explanation text.
+ */
+export const extractExplanation = (text: string): string => {
+  const match = text.match(/```markdown\n([\s\S]*?)```/);
+  if (match && match.index !== undefined) {
+    return text.slice(match.index + match[0].length).trim();
+  }
+  const openBlock = text.match(/```markdown\n([\s\S]*)/);
+  if (openBlock && openBlock.index !== undefined) {
+    return text.slice(openBlock.index + openBlock[0].length).trim();
+  }
+  return "";
+};
+
+/**
  * Normalizes markdown content for diffing by adding line breaks after headers, lists, etc.
  * @param md - The markdown content to normalize.
  * @returns The normalized markdown content.
