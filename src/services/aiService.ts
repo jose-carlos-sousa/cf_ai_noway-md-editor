@@ -1,10 +1,8 @@
 import { Message } from "@/types";
 
-const LLM_WORKER_URL = process.env.NEXT_PUBLIC_LLM_URL || "https://my-llama-xd.2409jmsousa.workers.dev";
-
 export const aiService = {
   async sendMessage(markdown: string, userMessage: string, chatHistory: Message[]) {
-    const response = await fetch(LLM_WORKER_URL, {
+    const response = await fetch("/api/ai", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

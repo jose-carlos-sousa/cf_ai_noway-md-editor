@@ -8,8 +8,12 @@ This project is a Cloudflare-deployable Next.js app (OpenNext) that demonstrates
 
 ## Architecture
 - Frontend: Next.js running on Cloudflare Worker
-- API: Worker handles API requests and talks to Workers KV for storage
-- AI: Worker AI provides Llama 3 for editing assistance
+- API: Next.js API routes handle requests and talk to Workers KV for storage
+- AI: Next.js `/api/ai` proxies to a dedicated AI Worker via Cloudflare service binding (`LLM_WORKER` -> `my-llama-xd`)
+
+## Worker bindings required
+- `KV` namespace binding for markdown persistence.
+- `LLM_WORKER` service binding pointing to your AI worker service (`my-llama-xd`).
 
 ## Local development
 Install dependencies and run locally:

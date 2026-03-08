@@ -30,6 +30,11 @@
 			// see https://opennext.js.org/cloudflare/caching
 			"binding": "WORKER_SELF_REFERENCE",
 			"service": "noway-md-editor"
+		},
+		{
+			// Service binding to the dedicated Workers AI proxy worker.
+			"binding": "LLM_WORKER",
+			"service": "my-llama-xd"
 		}
 	],
 	"observability": {
